@@ -103,6 +103,34 @@ travel-planning-assistant/
 
 ---
 
+## ☁️ Deploying to Streamlit Community Cloud
+
+`.env` files are `.gitignore`d on purpose (they can hold secrets), so they
+**never reach your deployed app**. If you deploy and see
+`Configuration error: No LLM API key found`, that's why — you need to set
+the key as a **Streamlit secret** instead:
+
+1. Push this repo to GitHub (the `.env` file will *not* be included — that's correct).
+2. On [share.streamlit.io](https://share.streamlit.io), create a new app pointing at your repo, with `app.py` as the entry point.
+3. Once deployed, go to your app → **⋮ menu → Settings → Secrets**.
+4. Paste in:
+   ```toml
+   ANTHROPIC_API_KEY = "sk-ant-your-real-key"
+   ```
+   (or `OPENAI_API_KEY` if you're using OpenAI instead).
+5. Click **Save** — the app reboots automatically with the key available.
+
+The app (`app.py`) copies `st.secrets` into `os.environ` at startup, so no
+code changes are needed between local and cloud runs. For quick one-off
+testing without touching secrets at all, the sidebar also has a
+"paste a key" fallback that only lives for the current session.
+
+A `.streamlit/secrets.toml.example` template is included for local testing
+of this same mechanism — copy it to `.streamlit/secrets.toml` (git-ignored)
+if you want to test secrets locally instead of `.env`.
+
+---
+
 ## 🧠 How the agent reasons
 
 `src/agent.py` builds a LangChain **tool-calling agent** (`create_agent`)

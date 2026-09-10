@@ -4,5 +4,6 @@ __pycache__/
 .venv/
 venv/
 .streamlit/secrets.toml
+!.streamlit/secrets.toml.example
 *.egg-info/
 .pytest_cache/
