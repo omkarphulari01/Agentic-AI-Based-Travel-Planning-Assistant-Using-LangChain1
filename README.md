@@ -79,11 +79,25 @@ travel-planning-assistant/
    ```bash
    cp .env.example .env
    ```
-   Edit `.env` and set **either**:
-   - `ANTHROPIC_API_KEY` (Claude — used by default if present), or
-   - `OPENAI_API_KEY` (used only if the Anthropic key isn't set)
+   Edit `.env` and set **one** of these (checked in this order):
+   - `GOOGLE_API_KEY` — **genuinely free**, no credit card, no expiry. Get
+     one at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
+     Uses Gemini 2.5 Flash by default. **Recommended if you just want to
+     run this project without paying for anything.**
+   - `ANTHROPIC_API_KEY` — Claude (paid, used only if `GOOGLE_API_KEY` isn't set)
+   - `OPENAI_API_KEY` — GPT (paid, used only if neither of the above is set)
 
    No key is required for the Weather tool — Open-Meteo is free and keyless.
+
+   > **Why does the LLM need a key if the project brief says "no API key
+   > required"?** That line in the brief refers specifically to the
+   > **Weather** API (Open-Meteo) — and this project honors that exactly;
+   > `get_weather_forecast` never needs any credentials. The *agent's
+   > reasoning* is a separate thing: an "agentic AI" system is, by
+   > definition, powered by an LLM, and every LLM provider requires some
+   > form of API key to call it. Google's Gemini free tier is the closest
+   > thing to "no key needed" in practice — it's free forever with no card
+   > on file, just a Google account.
 
 4. **Run the tests** (fast, no API key required — they only exercise the
    local dataset tools):
@@ -113,11 +127,16 @@ the key as a **Streamlit secret** instead:
 1. Push this repo to GitHub (the `.env` file will *not* be included — that's correct).
 2. On [share.streamlit.io](https://share.streamlit.io), create a new app pointing at your repo, with `app.py` as the entry point.
 3. Once deployed, go to your app → **⋮ menu → Settings → Secrets**.
-4. Paste in:
+4. Paste in one of:
+   ```toml
+   GOOGLE_API_KEY = "your-real-google-ai-studio-key"
+   ```
+   (recommended — genuinely free) or, if you'd rather use a paid provider:
    ```toml
    ANTHROPIC_API_KEY = "sk-ant-your-real-key"
    ```
-   (or `OPENAI_API_KEY` if you're using OpenAI instead).
+   **Paste your actual key, not a placeholder** — leaving text like
+   `"your-real-key"` un-replaced will fail with `401: API key is invalid`.
 5. Click **Save** — the app reboots automatically with the key available.
 
 The app (`app.py`) copies `st.secrets` into `os.environ` at startup, so no
@@ -161,9 +180,9 @@ coordinate lookup table in `src/utils.py`). Add more cities by extending
 
 - **More cities/data**: add rows to `data/*.json` and a coordinate entry in
   `src/utils.py`; no code changes needed elsewhere.
-- **Swap the LLM provider**: `src/agent.py::get_llm()` picks Anthropic or
-  OpenAI automatically based on which API key is set — add another
-  `elif` branch for a different provider.
+- **Swap the LLM provider**: `src/agent.py::get_llm()` checks
+  `GOOGLE_API_KEY` → `ANTHROPIC_API_KEY` → `OPENAI_API_KEY` in that order —
+  add another `elif` branch for a different provider (e.g. Groq).
 - **Persist itineraries to a database**: the tool outputs are plain dicts,
   so they can be written straight into a SQL table (e.g. `trips`,
   `trip_days`, `trip_costs`) if you want to add a persistence layer per the

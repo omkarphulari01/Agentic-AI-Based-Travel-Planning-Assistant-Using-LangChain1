@@ -33,7 +33,11 @@ from src.agent import plan_trip
 # os.getenv() calls keep working unchanged in both environments.
 load_dotenv()
 
-for _key in ("ANTHROPIC_API_KEY", "ANTHROPIC_MODEL", "OPENAI_API_KEY", "OPENAI_MODEL"):
+for _key in (
+    "GOOGLE_API_KEY", "GOOGLE_MODEL",
+    "ANTHROPIC_API_KEY", "ANTHROPIC_MODEL",
+    "OPENAI_API_KEY", "OPENAI_MODEL",
+):
     try:
         if _key in st.secrets and st.secrets[_key]:
             os.environ[_key] = str(st.secrets[_key])
@@ -57,38 +61,69 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    .stApp { background: radial-gradient(1200px 600px at 50% -10%, #1a2440 0%, #0b0f19 55%); }
+    .stApp {
+        background:
+            radial-gradient(900px 420px at 8% -8%, rgba(255,107,157,.16), transparent 60%),
+            radial-gradient(900px 420px at 95% 5%, rgba(96,165,250,.16), transparent 60%),
+            radial-gradient(900px 500px at 50% 110%, rgba(52,211,153,.12), transparent 60%),
+            #0b0f19;
+    }
     .hero-title {
-        font-size: 2.4rem; font-weight: 800; line-height: 1.15;
-        background: linear-gradient(90deg, #ffb86b, #ff7ab6 45%, #7cc5ff 90%);
+        font-size: 2.5rem; font-weight: 800; line-height: 1.15;
+        background: linear-gradient(90deg, #ff6b9d, #ffb84d 35%, #4ade80 65%, #60a5fa 100%);
         -webkit-background-clip: text; background-clip: text; color: transparent;
         margin-bottom: 0.2rem;
     }
     .hero-sub { color: #9aa4c0; font-size: 1.02rem; margin-bottom: 1.4rem; }
+
+    /* Section cards, each with its own accent color */
+    .sec-card {
+        border-radius: 16px; padding: 16px 18px; margin-bottom: 14px;
+        border: 1px solid rgba(255,255,255,.08);
+    }
+    .sec-flight  { background: linear-gradient(135deg, rgba(96,165,250,.16), rgba(96,165,250,.03)); border-left: 4px solid #60a5fa; }
+    .sec-hotel   { background: linear-gradient(135deg, rgba(244,114,182,.16), rgba(244,114,182,.03)); border-left: 4px solid #f472b6; }
+    .sec-weather { background: linear-gradient(135deg, rgba(251,191,36,.16), rgba(251,191,36,.03)); border-left: 4px solid #fbbf24; }
+    .sec-title { font-weight: 800; font-size: 1.02rem; margin-bottom: 6px; }
+
     .day-badge {
-        display: inline-block; background: linear-gradient(90deg,#ff7ab6,#7cc5ff);
-        color: #0b0f19; font-weight: 700; padding: 2px 10px; border-radius: 999px;
+        display: inline-block; background: linear-gradient(90deg,#34d399,#60a5fa);
+        color: #0b0f19; font-weight: 800; padding: 3px 12px; border-radius: 999px;
         font-size: 0.8rem; margin-right: 8px;
     }
     .place-chip {
-        display: inline-block; background: #1c2440; border: 1px solid #2c3660;
-        border-radius: 10px; padding: 6px 12px; margin: 4px 6px 4px 0; font-size: 0.92rem;
+        display: inline-block; background: rgba(52,211,153,.14); border: 1px solid rgba(52,211,153,.4);
+        color: #d1fae5; border-radius: 10px; padding: 6px 12px; margin: 4px 6px 4px 0; font-size: 0.92rem;
     }
     .metric-card {
-        background: #131a2e; border: 1px solid #232c4d; border-radius: 14px;
+        background: linear-gradient(135deg, rgba(52,211,153,.14), rgba(52,211,153,.02));
+        border: 1px solid rgba(52,211,153,.35); border-radius: 14px;
         padding: 14px 16px; text-align: center;
     }
-    .metric-label { color: #8b95b8; font-size: 0.82rem; text-transform: uppercase; letter-spacing: .04em; }
+    .metric-label { color: #9fe6c4; font-size: 0.82rem; text-transform: uppercase; letter-spacing: .04em; }
     .metric-value { font-size: 1.35rem; font-weight: 800; color: #f2f4fb; }
     .total-card {
-        background: linear-gradient(90deg, rgba(255,184,107,.16), rgba(124,197,255,.16));
-        border: 1px solid #3a4a86; border-radius: 14px; padding: 16px; text-align: center;
+        background: linear-gradient(90deg, rgba(255,184,107,.28), rgba(244,114,182,.22), rgba(96,165,250,.22));
+        border: 1px solid #f4c17a; border-radius: 14px; padding: 16px; text-align: center;
     }
     .total-value { font-size: 1.9rem; font-weight: 900; color: #ffe6c9; }
     .weather-chip {
-        background: #131a2e; border: 1px solid #232c4d; border-radius: 14px;
+        background: linear-gradient(135deg, rgba(251,191,36,.16), rgba(251,191,36,.02));
+        border: 1px solid rgba(251,191,36,.4); border-radius: 14px;
         padding: 10px; text-align: center;
     }
+
+    /* Colorful submit button */
+    div[data-testid="stFormSubmitButton"] button {
+        background: linear-gradient(90deg, #ff6b9d, #ffb84d, #4ade80, #60a5fa);
+        background-size: 300% 100%; color: #0b0f19; font-weight: 800; border: none;
+        transition: background-position .4s ease;
+    }
+    div[data-testid="stFormSubmitButton"] button:hover { background-position: 100% 0; color: #0b0f19; }
+
+    /* Slider + tabs accent */
+    div[data-baseweb="slider"] div[role="slider"] { background-color: #f472b6 !important; }
+    .stTabs [aria-selected="true"] { color: #4ade80 !important; border-bottom-color: #4ade80 !important; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -99,30 +134,45 @@ st.markdown(
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("### ⚙️ Model connection")
-    has_key = bool(os.getenv("ANTHROPIC_API_KEY") or os.getenv("OPENAI_API_KEY"))
+    has_key = bool(
+        os.getenv("GOOGLE_API_KEY") or os.getenv("ANTHROPIC_API_KEY") or os.getenv("OPENAI_API_KEY")
+    )
 
     if has_key:
-        provider = "Claude (Anthropic)" if os.getenv("ANTHROPIC_API_KEY") else "OpenAI"
+        if os.getenv("GOOGLE_API_KEY"):
+            provider = "Gemini (Google, free tier)"
+        elif os.getenv("ANTHROPIC_API_KEY"):
+            provider = "Claude (Anthropic)"
+        else:
+            provider = "OpenAI"
         st.success(f"✅ Connected — using {provider}")
     else:
         st.error("⚠️ No API key configured")
         with st.expander("Fix this", expanded=True):
             st.markdown(
+                "**Don't want to pay for anything?** Google's Gemini API "
+                "has a genuinely free tier — no credit card, no expiry:\n"
+                "1. Get a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)\n"
+                "2. Add it as `GOOGLE_API_KEY` below (or as a secret/`.env` — see 'Fix this' details).\n\n"
                 "**Deployed on Streamlit Cloud?** Go to your app → "
-                "**Settings → Secrets** and add:\n\n"
-                "```toml\nANTHROPIC_API_KEY = \"sk-ant-...\"\n```\n"
-                "then reboot the app.\n\n"
+                "**Settings → Secrets** and add:\n"
+                "```toml\nGOOGLE_API_KEY = \"your-real-key\"\n```\n"
+                "then reboot the app. (Or use `ANTHROPIC_API_KEY` / "
+                "`OPENAI_API_KEY` if you'd rather use a paid provider you "
+                "already have.)\n\n"
                 "**Running locally?** Copy `.env.example` to `.env` and "
                 "fill in your key.\n\n"
                 "**Just testing right now?** Paste a key below "
                 "(session-only, never saved)."
             )
-            pasted_key = st.text_input("Anthropic or OpenAI API key", type="password")
+            pasted_key = st.text_input("Google, Anthropic, or OpenAI API key", type="password")
             if pasted_key:
                 if pasted_key.startswith("sk-ant"):
                     os.environ["ANTHROPIC_API_KEY"] = pasted_key
-                else:
+                elif pasted_key.startswith("sk-"):
                     os.environ["OPENAI_API_KEY"] = pasted_key
+                else:
+                    os.environ["GOOGLE_API_KEY"] = pasted_key
                 st.rerun()
 
     st.divider()
@@ -249,26 +299,30 @@ def render_itinerary(text: str) -> None:
     # --- Flight & Hotel side by side -------------------------------------------------
     col_f, col_h = st.columns(2)
     with col_f:
-        with st.container(border=True):
-            st.markdown("**✈️ Flight Selected**")
-            st.write(sections.get("Flight Selected", "—"))
+        st.markdown(
+            f'<div class="sec-card sec-flight"><div class="sec-title">✈️ Flight Selected</div>'
+            f'{sections.get("Flight Selected", "—")}</div>',
+            unsafe_allow_html=True,
+        )
     with col_h:
-        with st.container(border=True):
-            st.markdown("**🏨 Hotel Booked**")
-            st.write(sections.get("Hotel Booked", "—"))
+        st.markdown(
+            f'<div class="sec-card sec-hotel"><div class="sec-title">🏨 Hotel Booked</div>'
+            f'{sections.get("Hotel Booked", "—")}</div>',
+            unsafe_allow_html=True,
+        )
 
     # --- Weather ------------------------------------------------------------
     weather_raw = sections.get("Weather", "")
     day_lines = [l.strip("- ").strip() for l in weather_raw.splitlines() if l.strip()]
     if day_lines:
-        st.markdown("**🌦️ Weather**")
+        st.markdown('<div class="sec-title" style="margin-top:6px;">🌦️ Weather</div>', unsafe_allow_html=True)
         cols = st.columns(len(day_lines))
         for col, line in zip(cols, day_lines):
             label, _, rest = line.partition(":")
             with col:
                 st.markdown(
                     f'<div class="weather-chip">{weather_icon(rest)}<br>'
-                    f'<b>{label.strip()}</b><br><span style="color:#9aa4c0;font-size:.85rem">'
+                    f'<b>{label.strip()}</b><br><span style="color:#f4d78a;font-size:.85rem">'
                     f"{rest.strip()}</span></div>",
                     unsafe_allow_html=True,
                 )
@@ -277,7 +331,7 @@ def render_itinerary(text: str) -> None:
     itinerary_raw = sections.get("Itinerary", "")
     day_plan_lines = [l.strip() for l in itinerary_raw.splitlines() if l.strip()]
     if day_plan_lines:
-        st.markdown("**🗺️ Day-wise Itinerary**")
+        st.markdown('<div class="sec-title" style="margin-top:14px;">🗺️ Day-wise Itinerary</div>', unsafe_allow_html=True)
         tab_labels = [l.split(":")[0].strip() for l in day_plan_lines]
         tabs = st.tabs(tab_labels)
         for tab, line in zip(tabs, day_plan_lines):
@@ -292,7 +346,7 @@ def render_itinerary(text: str) -> None:
     # --- Budget ---------------------------------------------------------------------
     budget_raw = sections.get("Estimated Total Budget", "")
     if budget_raw:
-        st.markdown("**💰 Budget Breakdown**")
+        st.markdown('<div class="sec-title" style="margin-top:14px;">💰 Budget Breakdown</div>', unsafe_allow_html=True)
         flight_m = re.search(r"Flight:\s*(₹?[\d,]+)", budget_raw)
         hotel_m = re.search(r"Hotel:\s*(₹?[\d,]+)", budget_raw)
         food_m = re.search(r"Food.*?:\s*(₹?[\d,]+)", budget_raw)
@@ -330,7 +384,7 @@ def render_itinerary(text: str) -> None:
 if submitted:
     if source == destination:
         st.error("Source and destination must be different cities.")
-    elif not (os.getenv("ANTHROPIC_API_KEY") or os.getenv("OPENAI_API_KEY")):
+    elif not (os.getenv("GOOGLE_API_KEY") or os.getenv("ANTHROPIC_API_KEY") or os.getenv("OPENAI_API_KEY")):
         st.error("⚠️ No API key configured — see the sidebar for how to fix this.")
     else:
         query_parts = [

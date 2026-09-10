@@ -82,10 +82,22 @@ RULES:
 def get_llm():
     """Instantiate the chat model based on available environment variables.
 
-    Defaults to Anthropic's Claude if ANTHROPIC_API_KEY is set, otherwise
-    falls back to OpenAI if OPENAI_API_KEY is set. Raises a clear error if
-    neither is configured.
+    Checks providers in this order and uses whichever key is set first:
+      1. GOOGLE_API_KEY  -> Gemini (genuinely free tier via Google AI Studio,
+         no credit card needed — the easiest zero-cost option for this
+         project; see README "Free API key options")
+      2. ANTHROPIC_API_KEY -> Claude
+      3. OPENAI_API_KEY   -> GPT
+
+    Raises a clear error if none are configured.
     """
+    if os.getenv("GOOGLE_API_KEY"):
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        return ChatGoogleGenerativeAI(
+            model=os.getenv("GOOGLE_MODEL", "gemini-2.5-flash"),
+            temperature=0.2,
+        )
     if os.getenv("ANTHROPIC_API_KEY"):
         from langchain_anthropic import ChatAnthropic
 
@@ -101,8 +113,9 @@ def get_llm():
             temperature=0.2,
         )
     raise RuntimeError(
-        "No LLM API key found. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in your "
-        "environment (see .env.example)."
+        "No LLM API key found. Set GOOGLE_API_KEY (free — see README), "
+        "ANTHROPIC_API_KEY, or OPENAI_API_KEY in your environment "
+        "(see .env.example)."
     )
 
 
