@@ -137,6 +137,32 @@ def build_agent_executor(verbose: bool = False):
     )
 
 
+def _extract_text(content) -> str:
+    """Normalize a chat model's message content into a plain string.
+
+    Different providers (and even different Gemini model generations)
+    represent `AIMessage.content` differently: sometimes a plain string,
+    sometimes a list of content blocks (e.g. `{"type": "text", "text": ...}`
+    dicts, tool/code blocks, etc). This flattens any of those shapes down
+    to the text a user should actually read.
+    """
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        pieces = []
+        for item in content:
+            if isinstance(item, str):
+                pieces.append(item)
+            elif isinstance(item, dict):
+                # Covers {"type": "text", "text": "..."} and similar shapes;
+                # silently skip non-text blocks (tool calls, code, etc).
+                text_piece = item.get("text")
+                if isinstance(text_piece, str):
+                    pieces.append(text_piece)
+        return "".join(p for p in pieces if p)
+    return str(content) if content is not None else ""
+
+
 def plan_trip(user_query: str, verbose: bool = False) -> str:
     """Run the agent end-to-end on a natural-language trip request.
 
@@ -151,4 +177,4 @@ def plan_trip(user_query: str, verbose: bool = False) -> str:
     executor = build_agent_executor(verbose=verbose)
     result = executor.invoke({"messages": [{"role": "user", "content": user_query}]})
     final_message = result["messages"][-1]
-    return getattr(final_message, "content", str(final_message))
+    return _extract_text(getattr(final_message, "content", final_message))

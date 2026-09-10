@@ -15,6 +15,7 @@ from src.tools.flight_tool import search_flights
 from src.tools.hotel_tool import search_hotels
 from src.tools.places_tool import search_places
 from src.tools.budget_tool import estimate_budget
+from src.agent import _extract_text
 
 
 def test_search_flights_finds_known_route():
@@ -67,6 +68,30 @@ def test_estimate_budget_math():
     assert result["hotel_cost_total"] == 6400
     assert result["food_and_local_travel_total"] == 2500
     assert result["estimated_total_budget"] == 13700
+
+
+def test_extract_text_handles_plain_string():
+    assert _extract_text("Hello world") == "Hello world"
+
+
+def test_extract_text_handles_gemini_style_content_blocks():
+    """Regression test: Gemini (and some other providers) can return
+    AIMessage.content as a list of blocks instead of a plain string,
+    which previously crashed the Streamlit app's regex parser with
+    'TypeError: expected string or bytes-like object, got list'.
+    """
+    blocks = [{"type": "text", "text": "Hello "}, {"type": "text", "text": "world"}]
+    assert _extract_text(blocks) == "Hello world"
+
+
+def test_extract_text_skips_non_text_blocks():
+    blocks = [{"type": "text", "text": "Answer: 42"}, {"type": "executable_code", "code": "x=1"}]
+    assert _extract_text(blocks) == "Answer: 42"
+
+
+def test_extract_text_handles_empty_and_none():
+    assert _extract_text([]) == ""
+    assert _extract_text(None) == ""
 
 
 if __name__ == "__main__":

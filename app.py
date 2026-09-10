@@ -262,13 +262,17 @@ def weather_icon(condition: str) -> str:
     return "🌤️"
 
 
-def parse_itinerary(text: str) -> dict:
+def parse_itinerary(text) -> dict:
     """Split the agent's structured itinerary text into labeled sections.
 
     Falls back gracefully (returns just {'title': text}) if the agent
     replied with something other than the expected format, e.g. a
-    clarifying question.
+    clarifying question. Also defensively coerces non-string input to a
+    string, in case a provider ever returns structured content blocks
+    instead of plain text.
     """
+    if not isinstance(text, str):
+        text = str(text)
     pattern = "(" + "|".join(re.escape(h) for h in SECTION_HEADERS) + ")"
     parts = re.split(pattern, text)
     sections = {"title": parts[0].strip()}
