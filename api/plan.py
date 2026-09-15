@@ -198,3 +198,8 @@ class handler(BaseHTTPRequestHandler):
             self._send_cors_headers()
             self.end_headers()
             self.wfile.write(err_bytes)
+
+
+# Export both handler and app for Vercel Python runtime
+app = handler
+
