@@ -47,3 +47,28 @@ def test_vercel_handler_options():
     assert req.status_code == 200
     res = json.loads(req.wfile.getvalue().decode("utf-8"))
     assert res["status"] == "ok"
+
+
+def test_vercel_wsgi_app():
+    """Verify WSGI app entrypoint in api/index.py."""
+    from api.index import app
+
+    statuses = []
+    headers = []
+
+    def start_response(status, res_headers):
+        statuses.append(status)
+        headers.extend(res_headers)
+
+    # Test GET
+    body_parts = app({"REQUEST_METHOD": "GET"}, start_response)
+    assert statuses[-1] == "200 OK"
+    data = json.loads(b"".join(body_parts).decode("utf-8"))
+    assert data["status"] == "running"
+
+    # Test OPTIONS
+    body_parts = app({"REQUEST_METHOD": "OPTIONS"}, start_response)
+    assert statuses[-1] == "200 OK"
+    data = json.loads(b"".join(body_parts).decode("utf-8"))
+    assert data["status"] == "ok"
+

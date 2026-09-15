@@ -204,6 +204,8 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(err_bytes)
 
 
-# Export both handler and app for Vercel Python runtime
-app = handler
+# Export both handler (BaseHTTPRequestHandler) and app (WSGI callable)
+from api.index import app, application
+
+__all__ = ["handler", "app", "application", "_extract_hotel_and_places"]
 
