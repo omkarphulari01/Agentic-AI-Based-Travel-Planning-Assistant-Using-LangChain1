@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>TRIP PLANER — AI Travel Planning Assistant</title>
+  <meta name="description" content="Autonomous AI travel planner powered by Google Gemini 2.5 with multi-key failover, multi-modal transport comparison, interactive maps, 1-click booking, and calendar sync.">
+  
+  <!-- PWA & Mobile Capabilities -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#07090e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TRIP PLANER">
+  <link rel="apple-touch-icon" href="/icons/icon.svg">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Custom Design System -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app-body">
+  <!-- Background Atmospheric Effects -->
+  <div class="glow-sphere sphere-1"></div>
+  <div class="glow-sphere sphere-2"></div>
+
+  <!-- Top App Navigation (Desktop & Mobile) -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-compass"></i>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">TRIP <span class="gradient-text">PLANER</span></span>
+          <span class="brand-badge">Gemini 2.5</span>
+        </div>
+      </div>
+      
+      <div class="nav-meta">
+        <!-- Install Mobile App Prompt Button -->
+        <button id="installAppBtn" class="btn-install-app" style="display: none;">
+          <i class="fa-solid fa-download"></i>
+          <span>Install App</span>
+        </button>
+        <span class="status-pill"><span class="status-dot"></span> 6 Keys</span>
+        <span class="netlify-pill"><i class="fa-solid fa-bolt"></i> Netlify</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Top Tab Bar (Visible on Mobile Only) -->
+  <div class="mobile-tab-bar" id="mobileTabBar">
+    <button class="m-tab-btn active" data-tab="tab-plan">
+      <i class="fa-solid fa-sliders"></i>
+      <span>Plan</span>
+    </button>
+    <button class="m-tab-btn" data-tab="tab-map">
+      <i class="fa-solid fa-map-location-dot"></i>
+      <span>Map</span>
+    </button>
+    <button class="m-tab-btn" data-tab="tab-booking">
+      <i class="fa-solid fa-bolt"></i>
+      <span>Bookings</span>
+    </button>
+    <button class="m-tab-btn" data-tab="tab-itinerary">
+      <i class="fa-solid fa-route"></i>
+      <span>Itinerary</span>
+    </button>
+  </div>
+
+  <!-- Main Content Layout (Desktop Split / Mobile Tabs) -->
+  <main class="container main-layout">
+    <!-- Tab 1: Planner Section -->
+    <section class="planner-card glass-panel app-tab-pane active" id="tab-plan">
+      <div class="panel-header">
+        <h2><i class="fa-solid fa-sliders"></i> Plan Your Trip</h2>
+        <p>AI travel design with flights, trains, sleeper buses & budget intelligence</p>
+      </div>
+
+      <form id="tripForm" class="trip-form">
+        <!-- Origin & Destination -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="origin"><i class="fa-solid fa-plane-departure text-emerald"></i> Origin</label>
+            <input type="text" id="origin" name="origin" value="Delhi" required placeholder="e.g. Delhi, Mumbai">
+          </div>
+          <div class="form-group">
+            <label for="destination"><i class="fa-solid fa-location-dot text-rose"></i> Destination</label>
+            <input type="text" id="destination" name="destination" value="Goa" required placeholder="e.g. Goa, Jaipur">
+          </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="startDate"><i class="fa-regular fa-calendar"></i> Departure</label>
+            <input type="date" id="startDate" name="startDate" required>
+          </div>
+          <div class="form-group">
+            <label for="endDate"><i class="fa-regular fa-calendar-check"></i> Return</label>
+            <input type="date" id="endDate" name="endDate" required>
+          </div>
+        </div>
+
+        <!-- Budget & Travelers -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="budget"><i class="fa-solid fa-indian-rupee-sign text-amber"></i> Budget (₹)</label>
+            <input type="number" id="budget" name="budget" value="25000" min="2000" step="500">
+          </div>
+          <div class="form-group">
+            <label for="travelers"><i class="fa-solid fa-users text-cyan"></i> Guests</label>
+            <input type="number" id="travelers" name="travelers" value="1" min="1" max="10">
+          </div>
+        </div>
+
+        <!-- Transportation Preference -->
+        <div class="form-group">
+          <label><i class="fa-solid fa-route text-indigo"></i> Transit Mode</label>
+          <div class="transport-selector">
+            <label class="radio-pill">
+              <input type="radio" name="transportMode" value="All Options (Recommended)" checked>
+              <span><i class="fa-solid fa-layer-group"></i> All</span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="transportMode" value="Flights Only">
+              <span><i class="fa-solid fa-plane"></i> Flights</span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="transportMode" value="Trains Only">
+              <span><i class="fa-solid fa-train"></i> Trains</span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="transportMode" value="Buses Only">
+              <span><i class="fa-solid fa-bus"></i> Buses</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Interests -->
+        <div class="form-group">
+          <label for="interests"><i class="fa-solid fa-heart text-rose"></i> Trip Vibe & Interests</label>
+          <input type="text" id="interests" name="interests" value="Beaches, Sightseeing, Local Seafood, Sunset Spots" placeholder="e.g. History, Food, Nightlife">
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="submitBtn" class="btn-primary">
+          <span class="btn-text"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate AI Itinerary</span>
+          <span class="btn-loader" style="display: none;"><i class="fa-solid fa-spinner fa-spin"></i> Researching...</span>
+        </button>
+      </form>
+
+      <!-- Quick Starter Presets -->
+      <div class="presets-section">
+        <span class="presets-label">Popular Destinations:</span>
+        <div class="presets-pills">
+          <button type="button" class="preset-pill" data-origin="Delhi" data-dest="Goa" data-budget="25000" data-days="3">Delhi → Goa</button>
+          <button type="button" class="preset-pill" data-origin="Bangalore" data-dest="Jaipur" data-budget="30000" data-days="4">Bangalore → Jaipur</button>
+          <button type="button" class="preset-pill" data-origin="Mumbai" data-dest="Manali" data-budget="22000" data-days="4">Mumbai → Manali</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results Panel (Desktop Unified / Mobile Tab Panes) -->
+    <section class="results-card glass-panel" id="resultsCard">
+      <!-- Empty Placeholder State -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon-wrap">
+          <i class="fa-solid fa-earth-asia"></i>
+        </div>
+        <h3>Ready to Explore</h3>
+        <p>Set your destination and preferences. TRIP PLANER compares flights, trains, and sleeper buses to build your complete itinerary with interactive map pins and 1-click booking shortcuts.</p>
+        <div class="features-checklist">
+          <div><i class="fa-solid fa-check text-emerald"></i> Multi-Key Gemini 2.5 Failover</div>
+          <div><i class="fa-solid fa-check text-emerald"></i> Flights, Trains (Vande Bharat) & Sleeper Buses</div>
+          <div><i class="fa-solid fa-check text-emerald"></i> 1-Click Booking on Google, MakeMyTrip, IRCTC</div>
+          <div><i class="fa-solid fa-check text-emerald"></i> Interactive Leaflet Map & Calendar Export</div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" id="loadingState" style="display: none;">
+        <div class="scanner-wrap">
+          <div class="scanner-ring"></div>
+          <i class="fa-solid fa-plane-up fa-bounce scanner-icon"></i>
+        </div>
+        <h3 id="loadingStatusText">AI Agent Planning Your Journey...</h3>
+        <div class="loading-steps">
+          <div class="loading-step" id="step1"><i class="fa-regular fa-circle-check"></i> Comparing transit (Flights, Trains, Buses)</div>
+          <div class="loading-step" id="step2"><i class="fa-regular fa-circle-check"></i> Scouting top hotels & budget matching</div>
+          <div class="loading-step" id="step3"><i class="fa-regular fa-circle-check"></i> Mapping daily attractions & weather</div>
+          <div class="loading-step" id="step4"><i class="fa-regular fa-circle-check"></i> Assembling 1-click booking links & maps</div>
+        </div>
+      </div>
+
+      <!-- Generated Results Container -->
+      <div class="results-content" id="resultsContent" style="display: none;">
+        <!-- Top Actions Bar -->
+        <div class="results-action-bar">
+          <div class="trip-meta-tags" id="tripMetaTags"></div>
+          <div class="export-buttons">
+            <button id="downloadPdfBtn" class="btn-action" title="Save as PDF">
+              <i class="fa-solid fa-file-pdf text-rose"></i> Save PDF
+            </button>
+            <button id="downloadIcsBtn" class="btn-action" title="Add to Google / Apple Calendar">
+              <i class="fa-solid fa-calendar-plus text-indigo"></i> Add to Calendar
+            </button>
+            <button id="copyMarkdownBtn" class="btn-action" title="Copy Raw Markdown">
+              <i class="fa-regular fa-copy"></i> Copy
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab 2: Map Section -->
+        <div class="map-wrapper app-tab-pane" id="tab-map">
+          <div class="map-header">
+            <div class="map-title"><i class="fa-solid fa-map-location-dot text-cyan"></i> Interactive Route & Sightseeing Map</div>
+            <span class="map-legend"><span class="dot origin-dot"></span> Origin <span class="dot dest-dot"></span> Destination <span class="dot hotel-dot"></span> Hotel <span class="dot spot-dot"></span> Attractions</span>
+          </div>
+          <div id="leafletMap" class="leaflet-map-view"></div>
+        </div>
+
+        <!-- Tab 3: 1-Click Booking Shortcuts -->
+        <div class="booking-shortcuts-card app-tab-pane" id="tab-booking">
+          <div class="booking-title">
+            <i class="fa-solid fa-bolt text-amber"></i>
+            <span>1-Click Instant Booking</span>
+          </div>
+          <div class="booking-links-grid" id="bookingLinksGrid"></div>
+        </div>
+
+        <!-- Tab 4: Formatted Itinerary Markdown -->
+        <div class="itinerary-wrapper app-tab-pane" id="tab-itinerary">
+          <div class="itinerary-header">
+            <i class="fa-solid fa-route text-emerald"></i>
+            <h3>Detailed AI Itinerary & Budget Breakdown</h3>
+          </div>
+          <div class="itinerary-body markdown-content" id="itineraryOutput"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile Bottom Navigation Bar (Docked at bottom of screen on mobile) -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <button class="nav-item active" data-tab="tab-plan">
+      <i class="fa-solid fa-sliders"></i>
+      <span>Plan</span>
+    </button>
+    <button class="nav-item" data-tab="tab-map">
+      <i class="fa-solid fa-map-location-dot"></i>
+      <span>Map</span>
+    </button>
+    <button class="nav-item" data-tab="tab-booking">
+      <i class="fa-solid fa-bolt"></i>
+      <span>Book</span>
+    </button>
+    <button class="nav-item" data-tab="tab-itinerary">
+      <i class="fa-solid fa-route"></i>
+      <span>Itinerary</span>
+    </button>
+  </nav>
+
+  <!-- Footer (Desktop) -->
+  <footer class="footer">
+    <div class="container footer-container">
+      <p>TRIP PLANER • Autonomous Multi-Modal Travel Agent • Native Mobile PWA & Netlify Serverless</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

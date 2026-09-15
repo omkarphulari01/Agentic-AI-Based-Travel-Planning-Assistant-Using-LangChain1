@@ -268,5 +268,59 @@
         "departure_time": "2025-12-07T12:01:00",
         "arrival_time": "2025-12-07T14:01:00",
         "price": 6259
+    },
+    {
+        "flight_id": "FL0031",
+        "airline": "IndiGo",
+        "from": "Delhi",
+        "to": "Goa",
+        "departure_time": "2026-03-15T06:30:00",
+        "arrival_time": "2026-03-15T09:00:00",
+        "price": 4850
+    },
+    {
+        "flight_id": "FL0032",
+        "airline": "Air India",
+        "from": "Delhi",
+        "to": "Goa",
+        "departure_time": "2026-03-15T11:15:00",
+        "arrival_time": "2026-03-15T13:50:00",
+        "price": 5420
+    },
+    {
+        "flight_id": "FL0033",
+        "airline": "Akasa Air",
+        "from": "Delhi",
+        "to": "Goa",
+        "departure_time": "2026-03-15T16:45:00",
+        "arrival_time": "2026-03-15T19:15:00",
+        "price": 4490
+    },
+    {
+        "flight_id": "FL0034",
+        "airline": "IndiGo",
+        "from": "Delhi",
+        "to": "Mumbai",
+        "departure_time": "2026-03-15T07:00:00",
+        "arrival_time": "2026-03-15T09:15:00",
+        "price": 3890
+    },
+    {
+        "flight_id": "FL0035",
+        "airline": "Air India",
+        "from": "Mumbai",
+        "to": "Delhi",
+        "departure_time": "2026-03-15T18:30:00",
+        "arrival_time": "2026-03-15T20:45:00",
+        "price": 4120
+    },
+    {
+        "flight_id": "FL0036",
+        "airline": "IndiGo",
+        "from": "Bangalore",
+        "to": "Jaipur",
+        "departure_time": "2026-03-15T08:20:00",
+        "arrival_time": "2026-03-15T11:00:00",
+        "price": 4980
     }
 ]

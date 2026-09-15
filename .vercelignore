@@ -1,0 +1,19 @@
+# Exclude non-serverless scripts
+cli.py
+dev_server.py
+push_to_github.bat
+netlify/
+netlify.toml
+
+# Exclude virtual environments, caches, tests
+venv/
+.venv/
+__pycache__/
+*.pyc
+tests/
+.pytest_cache/
+.env
+.env.*
+.git/
+.gitignore
+README.md

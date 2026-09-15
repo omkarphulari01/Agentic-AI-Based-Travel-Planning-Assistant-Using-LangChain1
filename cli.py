@@ -16,6 +16,10 @@ from src.agent import plan_trip
 
 load_dotenv()
 
+# Ensure Windows terminal prints UTF-8 (Rupee symbols, emoji) without encoding errors
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 
 def main() -> None:
     if len(sys.argv) > 1:

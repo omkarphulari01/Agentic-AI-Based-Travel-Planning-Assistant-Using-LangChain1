@@ -1,0 +1,33 @@
+{
+  "name": "TRIP PLANER - AI Travel Planning Assistant",
+  "short_name": "TRIP PLANER",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "window-controls-overlay"],
+  "orientation": "portrait-primary",
+  "background_color": "#07090e",
+  "theme_color": "#07090e",
+  "description": "Autonomous multi-modal AI travel planner with interactive maps, 1-click booking, and calendar sync.",
+  "categories": ["travel", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Plan Trip",
+      "url": "/#plan",
+      "description": "Plan a new multi-modal trip"
+    },
+    {
+      "name": "Saved Itinerary",
+      "url": "/#itinerary",
+      "description": "View current itinerary and interactive map"
+    }
+  ]
+}

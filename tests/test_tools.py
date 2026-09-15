@@ -94,7 +94,36 @@ def test_extract_text_handles_empty_and_none():
     assert _extract_text(None) == ""
 
 
+def test_google_key_pool_and_rotation():
+    from src.agent import get_google_api_keys, rotate_to_next_google_key, get_google_key_pool_status, GOOGLE_API_KEYS
+
+    keys = get_google_api_keys()
+    assert len(keys) >= 6
+    assert all(k.startswith("AQ.") for k in GOOGLE_API_KEYS)
+
+    status_before = get_google_key_pool_status()
+    initial_idx = status_before["current_index"]
+
+    new_key, next_idx, total = rotate_to_next_google_key()
+    assert total == len(keys)
+    assert next_idx == (initial_idx % total) + 1
+    assert isinstance(new_key, str) and len(new_key) > 0
+
+
+def test_search_live_travel_info():
+    from src.tools.web_search_tool import search_live_travel_info
+    res = search_live_travel_info.invoke({
+        "source": "Delhi",
+        "destination": "Goa",
+        "query_type": "best_way_to_travel"
+    })
+    assert "results" in res
+    assert res["destination"] == "Goa"
+
+
 if __name__ == "__main__":
     import pytest
 
     raise SystemExit(pytest.main([__file__, "-v"]))
+
+

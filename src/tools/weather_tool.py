@@ -19,7 +19,8 @@ from pydantic import BaseModel, Field
 from src.utils import CITY_COORDINATES, get_city_coordinates
 
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
-REQUEST_TIMEOUT_SECONDS = 10
+REQUEST_TIMEOUT_SECONDS = 3.0
+
 
 # WMO weather interpretation codes -> short human-readable label.
 # https://open-meteo.com/en/docs#weathervariables

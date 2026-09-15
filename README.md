@@ -2,12 +2,11 @@
 
 An autonomous AI travel agent that plans realistic, budgeted, day-by-day trip
 itineraries by reasoning over flight, hotel, and attraction data and a live
-weather API — built with **LangChain**, **Streamlit**, and **Claude / GPT**.
+weather API — built with **LangChain**, **Vercel Serverless Functions**, and **Google Gemini / Claude / GPT**.
 
 This implements the capstone brief end-to-end: LangChain tools for flights,
 hotels, places, weather, and budget; a tool-calling agent that autonomously
-decides which tools to call and in what order; and both a CLI and a
-Streamlit UI.
+decides which tools to call and in what order; a modern responsive Web SPA UI, and a CLI.
 
 ---
 
@@ -15,18 +14,20 @@ Streamlit UI.
 
 | Requirement (from project brief)            | Implementation |
 |---------------------------------------------|----------------|
-| Flight Search Tool                          | `src/tools/flight_tool.py` — filters `flights.json` by route, ranks by price or duration |
-| Hotel Recommendation Tool                   | `src/tools/hotel_tool.py` — filters `hotels.json` by city, stars, price, amenities |
-| Places Discovery Tool                       | `src/tools/places_tool.py` — filters `places.json` by city, type, rating |
-| Weather Lookup Tool                         | `src/tools/weather_tool.py` — live daily forecast via free [Open-Meteo](https://open-meteo.com) API |
-| Budget Estimation Tool                      | `src/tools/budget_tool.py` — flight + hotel×nights + daily expenses |
-| Agentic reasoning (tool-calling agent)      | `src/agent.py` — LangChain `create_agent` (tool-calling loop) |
-| Structured itinerary output                 | Agent's system prompt enforces the exact output format from the brief |
-| Justification ("why we selected this")      | Agent prompt requires a short reasoning section |
-| Streamlit UI                                | `app.py` |
-| CLI                                          | `cli.py` |
-| Clean, modular, documented code             | Package layout below, docstrings + type hints throughout |
-| Error handling                               | Every tool and the CLI/UI wrap failures in try/except and return readable messages |
+| Netlify Serverless Backend                  | `netlify/functions/plan.py` — Serverless AI agent with 6-key Google Gemini failover rotation |
+| Modern Web UI (Netlify)                     | `public/` (`index.html`, `style.css`, `app.js`) — Luxury glassmorphic responsive SPA |
+| Interactive Map                             | `Leaflet.js` & `Folium` — visual route lines, hotel marker & day-wise attraction pins |
+| Multi-Modal Transport                       | Flights, Trains (Vande Bharat / Express), and Luxury Sleeper Buses |
+| 1-Click Booking Action Bar                  | Instant links for Google Flights, MakeMyTrip, Skyscanner, Booking.com, Agoda, IRCTC, RedBus |
+| Export & Calendar Sync                      | Instant `.ics` calendar sync & styled printable PDF generation |
+| Fast Corridor Knowledge Base                | Built-in high-speed corridors (Delhi-Goa, Delhi-Mumbai, etc.) for instant lookup |
+| Flight & Transit Search Tool                | `src/tools/flight_tool.py` & `src/tools/web_search_tool.py` |
+| Hotel Recommendation Tool                   | `src/tools/hotel_tool.py` — filters `hotels.json` & live fallback |
+| Places Discovery Tool                       | `src/tools/places_tool.py` — filters `places.json` & POIs |
+| Weather Lookup Tool                         | `src/tools/weather_tool.py` — live daily forecast via Open-Meteo |
+| Budget Estimation Tool                      | `src/tools/budget_tool.py` — flight/transit + hotel×nights + daily expenses |
+| Vercel Serverless Backend                   | `api/plan.py` — Serverless Python function |
+| Local Server Simulator                      | `dev_server.py` |
 
 ---
 
@@ -34,29 +35,80 @@ Streamlit UI.
 
 ```
 travel-planning-assistant/
-├── app.py                  # Streamlit UI
-├── cli.py                  # Command-line interface
+├── netlify.toml                # Netlify deployment configuration & redirects
+├── netlify/
+│   └── functions/
+│       ├── plan.py             # Serverless Python function (AI trip planning API)
+│       └── requirements.txt    # Netlify lambda dependencies
+├── public/                     # Netlify static publish folder (Modern Web UI)
+│   ├── index.html              # Single-page application structure
+│   ├── css/style.css           # Luxury dark glassmorphism styling
+│   └── js/app.js               # Leaflet map, .ics calendar, and streaming controller
+├── dev_server.py               # Local server simulating serverless environment (port 8888)
+├── cli.py                      # Command-line interface
 ├── requirements.txt
-├── .env.example            # Copy to .env and add your API key
-├── .gitignore
-├── data/
-│   ├── flights.json
-│   ├── hotels.json
-│   └── places.json
-├── src/
-│   ├── __init__.py
-│   ├── agent.py             # Builds the LangChain tool-calling agent
-│   ├── utils.py              # JSON loading + city→coordinates helper
-│   └── tools/
-│       ├── __init__.py
-│       ├── flight_tool.py
-│       ├── hotel_tool.py
-│       ├── places_tool.py
-│       ├── weather_tool.py
-│       └── budget_tool.py
+├── data/                       # Offline fallback datasets (flights, hotels, places)
+├── src/                        # Core agent, services, and search tools
+│   ├── agent.py                # LangChain agent + 6-key Google Gemini rotation pool
+│   ├── services/
+│   │   ├── booking_service.py  # 1-click booking links generator
+│   │   └── export_service.py   # PDF and Calendar (.ics) export engine
+│   └── tools/                  # Flight, Hotel, Places, Weather, Budget, Web Search tools
 └── tests/
-    └── test_tools.py         # Unit tests for the deterministic tools (no API key needed)
+    ├── test_netlify_function.py # Tests for Netlify serverless endpoints
+    ├── test_services.py        # Tests for booking, PDF, and calendar exports
+    └── test_tools.py           # Unit tests for search tools
 ```
+
+---
+
+## ☁️ Deploying to Netlify
+
+Deploying this application to **Netlify** takes under 2 minutes:
+
+### Option 1: Connect Git Repository (Recommended)
+1. Push this repository to **GitHub** (or GitLab / Bitbucket).
+2. Go to your [Netlify Dashboard](https://app.netlify.com) and click **"Add new site" > "Import an existing project"**.
+3. Select your repository.
+4. Netlify will automatically detect the settings from [`netlify.toml`](./netlify.toml):
+   - **Publish directory:** `public`
+   - **Functions directory:** `netlify/functions`
+5. Click **"Environment variables"** and add:
+   - `GOOGLE_API_KEYS` = your comma-separated Google Gemini API keys (or use the built-in 6-key pool)
+6. Click **Deploy Site**! Your web app and serverless API are live!
+
+### Option 2: Deploy via Netlify CLI
+```bash
+# Install Netlify CLI globally
+npm install -g netlify-cli
+
+# Login and deploy
+ntl login
+ntl init
+ntl deploy --prod
+```
+
+### Local Testing with Simulator
+You can preview the exact environment locally without pushing:
+```bash
+python dev_server.py
+```
+Open **http://localhost:8888** in your browser.
+
+---
+
+## ▲ Deploying to Vercel
+
+Deploying to **Vercel** is seamless:
+
+1. Push your changes to **GitHub**.
+2. Go to your [Vercel Dashboard](https://vercel.com/new) and import your repository.
+3. Vercel reads [`vercel.json`](./vercel.json) and [`.vercelignore`](./.vercelignore):
+   - **Frontend:** Automatically serves the glassmorphic web UI in `public/`
+   - **Backend API:** Deploys `api/plan.py` as a Python Serverless Function on `/api/plan`
+4. In **Project Settings → Environment Variables**, add:
+   - `GOOGLE_API_KEYS` = your Google Gemini API key(s)
+5. Click **Deploy**!
 
 ---
 
@@ -105,10 +157,11 @@ travel-planning-assistant/
    python -m pytest tests/ -v
    ```
 
-5. **Run the Streamlit app**
+5. **Run the local Web UI server**
    ```bash
-   streamlit run app.py
+   python dev_server.py
    ```
+   Open **http://localhost:8888** in your browser.
 
 6. **...or use the CLI**
    ```bash
@@ -117,38 +170,7 @@ travel-planning-assistant/
 
 ---
 
-## ☁️ Deploying to Streamlit Community Cloud
 
-`.env` files are `.gitignore`d on purpose (they can hold secrets), so they
-**never reach your deployed app**. If you deploy and see
-`Configuration error: No LLM API key found`, that's why — you need to set
-the key as a **Streamlit secret** instead:
-
-1. Push this repo to GitHub (the `.env` file will *not* be included — that's correct).
-2. On [share.streamlit.io](https://share.streamlit.io), create a new app pointing at your repo, with `app.py` as the entry point.
-3. Once deployed, go to your app → **⋮ menu → Settings → Secrets**.
-4. Paste in one of:
-   ```toml
-   GOOGLE_API_KEY = "your-real-google-ai-studio-key"
-   ```
-   (recommended — genuinely free) or, if you'd rather use a paid provider:
-   ```toml
-   ANTHROPIC_API_KEY = "sk-ant-your-real-key"
-   ```
-   **Paste your actual key, not a placeholder** — leaving text like
-   `"your-real-key"` un-replaced will fail with `401: API key is invalid`.
-5. Click **Save** — the app reboots automatically with the key available.
-
-The app (`app.py`) copies `st.secrets` into `os.environ` at startup, so no
-code changes are needed between local and cloud runs. For quick one-off
-testing without touching secrets at all, the sidebar also has a
-"paste a key" fallback that only lives for the current session.
-
-A `.streamlit/secrets.toml.example` template is included for local testing
-of this same mechanism — copy it to `.streamlit/secrets.toml` (git-ignored)
-if you want to test secrets locally instead of `.env`.
-
----
 
 ## 🧠 How the agent reasons
 
