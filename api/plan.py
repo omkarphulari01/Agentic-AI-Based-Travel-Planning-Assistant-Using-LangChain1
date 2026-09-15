@@ -19,9 +19,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
+from dotenv import load_dotenv
+
 from src.agent import plan_trip
 from src.services.booking_service import generate_booking_links
 from src.utils import get_city_coordinates
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
